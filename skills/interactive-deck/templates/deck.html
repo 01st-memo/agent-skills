@@ -290,8 +290,21 @@ const box = el => { const r = el.getBoundingClientRect(), s = stage.getBoundingC
 const yen = v => Math.round(v / 10000).toLocaleString() + '万円';
 const P = {}, DRAWERS = {};
 
-function show(i) {
+/* ブラウザの戻る・進む：ページ移動と一覧を URL（#p3 / #p3&ov）に積む。自動デモ中は積まずに置き換える */
+let histReady = false;
+const hashFor = (i, o) => '#' + (/static/.test(H) ? 'static&' : '') + 'p' + (i + 1) + (o ? '&ov' : '');
+function remember(i, o) {
+  if (CHECK || !histReady) return;
+  const h = hashFor(i, o); if (location.hash === h) return;
+  (demoing ? history.replaceState : history.pushState).call(history, { p: i, ov: !!o }, '', h);
+}
+addEventListener('popstate', e => {
+  const st = e.state || { p: +(location.hash.match(/p(\d+)/)?.[1] || 1) - 1, ov: /&ov/.test(location.hash) };
+  demoing = false; show(st.p, true); if (st.ov) enterOv(true);
+});
+function show(i, fromHistory) {
   i = Math.max(0, Math.min(pages.length - 1, i));
+  if (!fromHistory) remember(i, false);
   closeDrawer(); if (ov) exitOv();
   pages.forEach((p, k) => { p.classList.toggle('on', k === i); p.classList.remove('built'); });
   const p = pages[i], def = P[p.dataset.id] || {}; cur = i;
@@ -329,7 +342,7 @@ function layoutOv() {
   const w = 1920 * sc, h = 1080 * sc, x0 = (1920 - (cols * w + (cols - 1) * gap)) / 2;
   pages.forEach((p, k) => { const x = x0 + (k % cols) * (w + gap), y = top + Math.floor(k / cols) * (h + capH + gap); p.style.transform = `translate(${x}px,${y}px) scale(${sc})`; Object.assign(caps[k].style, { left: x + 'px', top: y + h + 10 + 'px', width: w + 'px' }); });
 }
-function enterOv() { closeDrawer(); ov = true; stage.classList.add('ov'); navSync(); pages.forEach(p => { (P[p.dataset.id]?.final || P[p.dataset.id]?.init)?.(p); p.classList.add('built'); }); layoutOv(); }
+function enterOv(fromHistory) { if (!fromHistory) remember(cur, true); closeDrawer(); ov = true; stage.classList.add('ov'); navSync(); pages.forEach(p => { (P[p.dataset.id]?.final || P[p.dataset.id]?.init)?.(p); p.classList.add('built'); }); layoutOv(); }
 function exitOv() { ov = false; stage.classList.remove('ov'); pages.forEach(p => p.style.transform = ''); }
 pages.forEach((p, k) => p.addEventListener('click', e => { if (ov) { e.stopPropagation(); e.preventDefault(); show(k); } }, true));
 /* 根拠パネル */
@@ -503,6 +516,6 @@ function selfCheck() {
 }
 
 const start = +(H.match(/p(\d+)/)?.[1] || 1) - 1;
-if (CHECK) selfCheck(); else show(start);
+if (CHECK) selfCheck(); else { show(start); history.replaceState({ p: cur, ov: false }, '', hashFor(cur)); histReady = true; if (/&ov/.test(H)) enterOv(); }
 </script>
 </body></html>

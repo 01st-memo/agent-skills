@@ -64,7 +64,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     }
   }
   await p.keyboard.press('1'); await wait(2500);
-  const on = () => p.$eval('.pg.on', e => [...document.querySelectorAll('.pg')].indexOf(e));
+  const on = () => p.evaluate(() => { const e = document.querySelector('.pg.on'); return e ? [...document.querySelectorAll('.pg')].indexOf(e) : -1; }).catch(() => -1);   // 資料の外へ出たら -1
   const z = await p.$('.pg.on [data-op="zoom"]');
   if (z) {
     await z.click(); await wait(900); if (await on() === 0) fails.push('p.1: ズームで他のページへ入れない');
@@ -84,6 +84,19 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     await p.click('#nav [data-nav="prev"]'); await wait(300); if (await on() !== 1) fails.push('ナビ: 前へが効かない');
     await p.keyboard.press('1'); await wait(300);
   }
+  // ブラウザの戻る・進む
+  try {
+    await p.keyboard.press('1'); await wait(300);
+    await p.click('#nav [data-nav="next"]'); await wait(300);
+    await p.click('#nav [data-nav="next"]'); await wait(300);
+    await p.goBack(); await wait(400); if (await on() !== 1) throw new Error('1つ前のページへ戻らない（資料の外へ出るか、別のページになる）');
+    await p.goBack(); await wait(400); if (await on() !== 0) throw new Error('2つ前のページへ戻らない');
+    await p.goForward(); await wait(400); if (await on() !== 1) fails.push('ブラウザの進む: 次のページへ進まない');
+    await p.keyboard.press('o'); await wait(600);
+    await p.goBack(); await wait(500);
+    if (await p.$eval('#stage', s => s.classList.contains('ov')).catch(() => false)) fails.push('ブラウザの戻る: 一覧が閉じない');
+    else if (await on() !== 1) fails.push('ブラウザの戻る: 一覧を閉じた後のページが違う');
+  } catch (e) { fails.push('ブラウザの戻る・進む: ' + e.message.split(/\r?\n/)[0]); await p.goto(url); await wait(400); }
   await p.keyboard.press('o'); await wait(900);
   if (!await p.$eval('#stage', s => s.classList.contains('ov'))) fails.push('O で一覧に入らない');
   await p.screenshot({ path: path.join(out, 'overview.png') });
