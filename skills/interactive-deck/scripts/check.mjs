@@ -64,8 +64,26 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
     }
   }
   await p.keyboard.press('1'); await wait(2500);
+  const on = () => p.$eval('.pg.on', e => [...document.querySelectorAll('.pg')].indexOf(e));
   const z = await p.$('.pg.on [data-op="zoom"]');
-  if (z) { await z.click(); await wait(900); const cur = await p.$eval('.pg.on', e => e.dataset.id); if (cur === 'p1') fails.push('p.1: ズームで他のページへ入れない'); }
+  if (z) {
+    await z.click(); await wait(900); if (await on() === 0) fails.push('p.1: ズームで他のページへ入れない');
+    await p.click('#nav [data-nav="home"]'); await wait(900); if (await on() !== 0) fails.push('ナビ: ズームで入った後に「全体像」で p.1 へ戻れない');
+  }
+  // 常設ナビ：全ページで見えていて、出所の文字と重ならず、前へ・次へが効く
+  if (!await p.$('#nav')) fails.push('常設ナビ（#nav）が無い');
+  else {
+    for (let i = 0; i < n; i++) {
+      await p.keyboard.press(String(i + 1)); await wait(300);
+      const hit = await p.evaluate(() => { const a = document.querySelector('#nav').getBoundingClientRect(), f = document.querySelector('.pg.on .foot span'); if (!f) return false; const b = f.getBoundingClientRect(); return a.width > 0 && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom; });
+      if (hit) fails.push(`p.${i + 1}: 常設ナビが出所の文字と重なる`);
+      if (!await p.isVisible('#nav')) fails.push(`p.${i + 1}: 常設ナビが見えない`);
+    }
+    await p.keyboard.press('2'); await wait(300);
+    await p.click('#nav [data-nav="next"]'); await wait(300); if (await on() !== 2) fails.push('ナビ: 次へが効かない');
+    await p.click('#nav [data-nav="prev"]'); await wait(300); if (await on() !== 1) fails.push('ナビ: 前へが効かない');
+    await p.keyboard.press('1'); await wait(300);
+  }
   await p.keyboard.press('o'); await wait(900);
   if (!await p.$eval('#stage', s => s.classList.contains('ov'))) fails.push('O で一覧に入らない');
   await p.screenshot({ path: path.join(out, 'overview.png') });

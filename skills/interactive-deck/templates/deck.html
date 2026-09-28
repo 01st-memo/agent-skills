@@ -79,6 +79,14 @@ table.t tr.me td{font-weight:700;color:var(--main)}
 .cap{position:absolute;display:none;color:#fff;font-size:20px;line-height:1.4}
 .ov .cap{display:block}
 /* 自動デモのカーソル */
+/* 常設ナビ（出所行の右端）：全体像／前へ／ページ番号／次へ。ページの外に1つだけ置くのでズーム中も一覧中も効く */
+#nav{position:absolute;right:80px;bottom:14px;display:flex;align-items:center;font-size:18px;color:var(--muted)}
+#nav button{background:none;border:0;font:700 18px var(--sans);color:var(--main);padding:6px 10px;cursor:pointer}
+#nav button:hover{background:var(--soft)}
+#nav button:disabled{color:var(--gray);cursor:default;background:none}
+#nav i{font-style:normal;color:var(--rule)}
+#navp{padding:0 10px;font-variant-numeric:tabular-nums}
+.ov #nav button{color:#fff}.ov #nav button:hover{background:rgba(255,255,255,.12)}.ov #nav button:disabled{color:#5f656b}.ov #navp{color:#c9cdd1}
 #cur{position:absolute;left:960px;top:1000px;width:40px;height:40px;display:none;z-index:9;pointer-events:none;transition:left .7s var(--ez),top .7s var(--ez)}
 #cur.press svg{transform:scale(.82)}
 #cur svg{transition:transform .15s;transform-origin:0 0}
@@ -140,7 +148,7 @@ table.t tr.me td{font-weight:700;color:var(--main)}
     <div class="entry rv" style="--d:1620ms" data-op="zoom" data-go="3"><b>p.4 ›</b> 全員に広げたときの効果</div>
     <div class="entry rv" style="--d:1680ms" data-op="zoom" data-go="4"><b>p.5 ›</b> 目標までに要る打ち手</div>
   </div>
-  <div class="foot"><span>出所：見本商事 営業部 工数調査（架空・見本用の数字）</span><span class="pno"></span></div>
+  <div class="foot"><span>出所：見本商事 営業部 工数調査（架空・見本用の数字）</span></div>
 </section>
 
 <!-- p.2 現状：切り口を切り替えると並び替わる（操作＝分類） -->
@@ -159,7 +167,7 @@ table.t tr.me td{font-weight:700;color:var(--main)}
     <button class="btn more" data-drawer="p2" data-demo="more-p2">内訳を見る ›</button>
   </aside>
   <div class="note">棒を押すと、その資料の内訳が開く。</div>
-  <div class="foot"><span>出所：見本商事 営業部 工数調査（架空・見本用の数字）</span><span class="pno"></span></div>
+  <div class="foot"><span>出所：見本商事 営業部 工数調査（架空・見本用の数字）</span></div>
 </section>
 
 <!-- p.3 検証：前が後へ形を変え、消えた分が破線で残る（操作＝比較） -->
@@ -193,7 +201,7 @@ table.t tr.me td{font-weight:700;color:var(--main)}
     <button class="btn more" data-drawer="p3">内訳を見る ›</button>
   </aside>
   <div class="note">破線は導入後に消えた分（位置は動かさない）。パイロット班は8人。</div>
-  <div class="foot"><span>出所：見本商事 営業部 パイロット班の工数記録（架空・見本用の数字）</span><span class="pno"></span></div>
+  <div class="foot"><span>出所：見本商事 営業部 パイロット班の工数記録（架空・見本用の数字）</span></div>
 </section>
 
 <!-- p.4 効果：条件をスライダーで動かすと結果が再計算される（操作＝因果） -->
@@ -219,7 +227,7 @@ table.t tr.me td{font-weight:700;color:var(--main)}
     <button class="btn more" data-drawer="p4">感度を見る ›</button>
   </aside>
   <div class="note">試算。時給換算3,000円・営業40人は見本の前提。削減率はパイロット班の実績（p.3）。</div>
-  <div class="foot"><span>出所：見本商事 営業部 工数調査・パイロット班の記録（架空・見本用の数字）</span><span class="pno"></span></div>
+  <div class="foot"><span>出所：見本商事 営業部 工数調査・パイロット班の記録（架空・見本用の数字）</span></div>
 </section>
 
 <!-- p.5 打ち手：打ち手をオン・オフすると不足が埋まる・残る（操作＝問題解決） -->
@@ -245,11 +253,12 @@ table.t tr.me td{font-weight:700;color:var(--main)}
     <button class="btn more" data-drawer="p5">前提を見る ›</button>
   </aside>
   <div class="note">置き場の効果はパイロット実績、他の2つは見本の前提による試算。</div>
-  <div class="foot"><span>出所：見本商事 営業部 工数調査・パイロット班の記録（架空・見本用の数字）</span><span class="pno"></span></div>
+  <div class="foot"><span>出所：見本商事 営業部 工数調査・パイロット班の記録（架空・見本用の数字）</span></div>
 </section>
 
 </div>
 <div id="ovhead">全ページ（見出しを縦に読む）</div>
+<nav id="nav" aria-label="ページ移動"><button data-nav="home">全体像</button><i>／</i><button data-nav="prev">‹ 前へ</button><i>／</i><span id="navp"></span><i>／</i><button data-nav="next">次へ ›</button></nav>
 <div id="tip"></div><div id="scrim"></div><aside id="drawer"></aside>
 <div id="cur"><svg width="40" height="40" viewBox="0 0 40 40"><path d="M2 2 L2 32 L10 25 L16 38 L22 35 L16 23 L27 23 Z" fill="#050505" stroke="#fff" stroke-width="2.5"/></svg></div>
 </div>
@@ -286,13 +295,27 @@ function show(i) {
   closeDrawer(); if (ov) exitOv();
   pages.forEach((p, k) => { p.classList.toggle('on', k === i); p.classList.remove('built'); });
   const p = pages[i], def = P[p.dataset.id] || {}; cur = i;
-  $$('.pno').forEach(e => e.textContent = `p.${i + 1} / ${pages.length}`);
+  navSync();
   if (STATIC) { (def.final || def.init)?.(p); p.classList.add('built'); return; }
   def.init?.(p); void p.offsetWidth; later(() => p.classList.add('built'));
   const h = $('.hint', p);
   if (h && !h.dataset.hinted) { h.dataset.hinted = 1; setTimeout(() => { if (cur === i && !ov) ring(h); }, 3000); }
 }
 function ring(el) { const b = box(el), r = document.createElement('div'); r.className = 'ring'; Object.assign(r.style, { left: b.x - 8 + 'px', top: b.y - 8 + 'px', width: b.w + 16 + 'px', height: b.h + 16 + 'px' }); stage.appendChild(r); setTimeout(() => r.remove(), 2400); }
+function navSync() {
+  $('#navp').textContent = `p.${cur + 1} / ${pages.length}`;
+  $('[data-nav="prev"]').disabled = cur === 0; $('[data-nav="next"]').disabled = cur === pages.length - 1;
+  $('[data-nav="home"]').disabled = cur === 0 && !ov;
+}
+function home() {   // 全体像（p.1）へ戻る。入ってきた入口カードへ引き戻すズームアウト
+  if (ov) return show(0);
+  if (cur === 0) return;
+  const from = cur; show(0);
+  const card = $(`.pg.on [data-op="zoom"][data-go="${from}"]`); if (STATIC || !card) return;
+  const b = box(card); cam.style.transition = 'none'; cam.style.transformOrigin = `${b.x + b.w / 2}px ${b.y + b.h / 2}px`; cam.style.transform = 'scale(2.6)'; cam.style.opacity = '0';
+  void cam.offsetWidth; cam.style.transition = ''; cam.style.transform = ''; cam.style.opacity = '1';
+}
+$('#nav').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.disabled) return; e.stopPropagation(); const a = b.dataset.nav; if (a === 'home') home(); else show(cur + (a === 'next' ? 1 : -1)); });
 function zoom(el, to) {
   if (STATIC || ov) return show(to);
   const b = box(el); cam.style.transformOrigin = `${b.x + b.w / 2}px ${b.y + b.h / 2}px`; cam.style.transform = 'scale(2.6)'; cam.style.opacity = '0';
@@ -306,7 +329,7 @@ function layoutOv() {
   const w = 1920 * sc, h = 1080 * sc, x0 = (1920 - (cols * w + (cols - 1) * gap)) / 2;
   pages.forEach((p, k) => { const x = x0 + (k % cols) * (w + gap), y = top + Math.floor(k / cols) * (h + capH + gap); p.style.transform = `translate(${x}px,${y}px) scale(${sc})`; Object.assign(caps[k].style, { left: x + 'px', top: y + h + 10 + 'px', width: w + 'px' }); });
 }
-function enterOv() { closeDrawer(); ov = true; stage.classList.add('ov'); pages.forEach(p => { (P[p.dataset.id]?.final || P[p.dataset.id]?.init)?.(p); p.classList.add('built'); }); layoutOv(); }
+function enterOv() { closeDrawer(); ov = true; stage.classList.add('ov'); navSync(); pages.forEach(p => { (P[p.dataset.id]?.final || P[p.dataset.id]?.init)?.(p); p.classList.add('built'); }); layoutOv(); }
 function exitOv() { ov = false; stage.classList.remove('ov'); pages.forEach(p => p.style.transform = ''); }
 pages.forEach((p, k) => p.addEventListener('click', e => { if (ov) { e.stopPropagation(); e.preventDefault(); show(k); } }, true));
 /* 根拠パネル */
@@ -333,7 +356,7 @@ stage.addEventListener('pointerout', e => { if (e.target.closest('[data-tip]')) 
 /* キー・スワイプ */
 addEventListener('keydown', e => {
   const k = e.key; if (e.target.tagName === 'INPUT' && /Arrow/.test(k)) return;
-  if (k === 'Escape') { demoing = false; if (stage.classList.contains('open')) closeDrawer(); else if (ov) show(cur); else if (cur > 0) show(0); }
+  if (k === 'Escape') { demoing = false; if (stage.classList.contains('open')) closeDrawer(); else if (ov) show(cur); else if (cur > 0) home(); }
   else if (k === 'ArrowRight' || k === ' ') { e.preventDefault(); show(ov ? cur : cur + 1); }
   else if (k === 'ArrowLeft') show(cur - 1);
   else if (/^[1-9]$/.test(k)) show(+k - 1);
