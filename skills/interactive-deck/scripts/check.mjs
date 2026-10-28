@@ -28,6 +28,8 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
 const fails = [];
 const wait = ms => new Promise(r => setTimeout(r, ms));
+// ページ番号キー：2桁は続けて打つ。10ページ以上の資料では1桁目のあと0.5秒待って確定するので、そのぶん待つ
+const goKey = async (p, no) => { for (const c of String(no)) await p.keyboard.press(c); await wait(600); };
 
 // 1) 自己点検
 {
@@ -45,7 +47,8 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   await p.goto(url); await wait(400);
   const n = await p.$$eval('.pg', a => a.length);
   for (let i = 0; i < n; i++) {
-    await p.keyboard.press(String(i + 1)); await wait(3200);
+    await goKey(p, i + 1);
+    await wait(3200);
     const ops = await p.$$(`.pg.on [data-op]:not([data-op="zoom"])`);
     for (const o of ops.slice(0, 3)) {
       const tag = await o.evaluate(e => e.tagName);
@@ -63,7 +66,7 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
       if (await p.$eval('#stage', s => s.classList.contains('open'))) fails.push(`p.${i + 1}: Esc で根拠パネルが閉じない`);
     }
   }
-  await p.keyboard.press('1'); await wait(2500);
+  await goKey(p, 1); await wait(1900);
   const on = () => p.evaluate(() => { const e = document.querySelector('.pg.on'); return e ? [...document.querySelectorAll('.pg')].indexOf(e) : -1; }).catch(() => -1);   // 資料の外へ出たら -1
   const z = await p.$('.pg.on [data-op="zoom"]');
   if (z) {
@@ -74,19 +77,19 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   if (!await p.$('#nav')) fails.push('常設ナビ（#nav）が無い');
   else {
     for (let i = 0; i < n; i++) {
-      await p.keyboard.press(String(i + 1)); await wait(300);
+      await goKey(p, i + 1);
       const hit = await p.evaluate(() => { const a = document.querySelector('#nav').getBoundingClientRect(), f = document.querySelector('.pg.on .foot span'); if (!f) return false; const b = f.getBoundingClientRect(); return a.width > 0 && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom; });
       if (hit) fails.push(`p.${i + 1}: 常設ナビが出所の文字と重なる`);
       if (!await p.isVisible('#nav')) fails.push(`p.${i + 1}: 常設ナビが見えない`);
     }
-    await p.keyboard.press('2'); await wait(300);
+    await goKey(p, 2);
     await p.click('#nav [data-nav="next"]'); await wait(300); if (await on() !== 2) fails.push('ナビ: 次へが効かない');
     await p.click('#nav [data-nav="prev"]'); await wait(300); if (await on() !== 1) fails.push('ナビ: 前へが効かない');
-    await p.keyboard.press('1'); await wait(300);
+    await goKey(p, 1);
   }
   // ブラウザの戻る・進む
   try {
-    await p.keyboard.press('1'); await wait(300);
+    await goKey(p, 1);
     await p.click('#nav [data-nav="next"]'); await wait(300);
     await p.click('#nav [data-nav="next"]'); await wait(300);
     await p.goBack(); await wait(400); if (await on() !== 1) throw new Error('1つ前のページへ戻らない（資料の外へ出るか、別のページになる）');

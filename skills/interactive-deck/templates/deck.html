@@ -77,7 +77,7 @@ table.t tr.me td{font-weight:700;color:var(--main)}
 .ov .pg{display:block;cursor:pointer;transition:transform .5s var(--ez);box-shadow:0 10px 30px rgba(0,0,0,.35)}
 .ov .pg:hover{outline:6px solid var(--t2)}
 .cap{position:absolute;display:none;color:#fff;font-size:20px;line-height:1.4}
-.ov .cap{display:block}
+.ov .cap{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 /* 自動デモのカーソル */
 /* 常設ナビ（出所行の右端）：全体像／前へ／ページ番号／次へ。ページの外に1つだけ置くのでズーム中も一覧中も効く */
 #nav{position:absolute;right:80px;bottom:14px;display:flex;align-items:center;font-size:18px;color:var(--muted)}
@@ -105,6 +105,9 @@ table.t tr.me td{font-weight:700;color:var(--main)}
 .entry{background:var(--soft);padding:0 22px;font-size:22px;line-height:1.45;cursor:pointer;display:flex;align-items:center;gap:10px}
 .entry b{color:var(--main)}
 .entry:hover{background:var(--t3)}
+/* 入口が5つ以上なら土台が .many を付けて2〜3段に詰める（列数は --cols） */
+.entries.many{grid-template-columns:repeat(var(--cols),1fr);grid-auto-rows:1fr;gap:10px 16px}
+.entries.many .entry{font-size:18px;line-height:1.3;padding:0 14px;gap:8px}
 .axis{position:absolute;right:0;top:-56px;display:flex;gap:12px}
 .sbar{position:absolute;left:0;top:70px;width:1026px;height:120px}
 .seg{position:absolute;top:0;height:120px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;background:var(--t3)}
@@ -335,10 +338,11 @@ function zoom(el, to) {
   setTimeout(() => { cam.style.transition = 'none'; cam.style.transform = ''; show(to); void cam.offsetWidth; cam.style.transition = ''; cam.style.opacity = '1'; }, 480);
 }
 /* 一覧（O） */
+$$('.entries').forEach(el => { const n = el.children.length; if (n <= 4) return; const rows = n <= 10 ? 2 : 3; el.classList.add('many'); el.style.setProperty('--cols', Math.ceil(n / rows)); });
 const caps = pages.map((p, k) => { const c = document.createElement('div'); c.className = 'cap'; c.textContent = `p.${k + 1}　${$('.head', p)?.textContent || ''}`; cam.appendChild(c); return c; });
 function layoutOv() {
-  const n = pages.length, cols = n <= 4 ? 2 : n <= 9 ? 3 : 4, rows = Math.ceil(n / cols), gap = 40, capH = 64, top = 130;
-  const sc = Math.min((1748 - (cols - 1) * gap) / cols / 1920, (1080 - top - 40 - (rows - 1) * gap - rows * capH) / rows / 1080);
+  const n = pages.length, cols = n <= 4 ? 2 : n <= 9 ? 3 : n <= 16 ? 4 : n <= 25 ? 5 : 6, rows = Math.ceil(n / cols), gap = 40, capH = 64, top = 130;
+  const sc = Math.min((1748 - (cols - 1) * gap) / cols / 1920, (1080 - top - 90 - (rows - 1) * gap - rows * capH) / rows / 1080);
   const w = 1920 * sc, h = 1080 * sc, x0 = (1920 - (cols * w + (cols - 1) * gap)) / 2;
   pages.forEach((p, k) => { const x = x0 + (k % cols) * (w + gap), y = top + Math.floor(k / cols) * (h + capH + gap); p.style.transform = `translate(${x}px,${y}px) scale(${sc})`; Object.assign(caps[k].style, { left: x + 'px', top: y + h + 10 + 'px', width: w + 'px' }); });
 }
@@ -367,12 +371,15 @@ stage.addEventListener('pointerover', e => { const t = e.target.closest('[data-t
 stage.addEventListener('pointermove', e => { if (tip.style.display !== 'block') return; const s = stage.getBoundingClientRect(); tip.style.left = (e.clientX - s.left) / S + 18 + 'px'; tip.style.top = (e.clientY - s.top) / S + 18 + 'px'; });
 stage.addEventListener('pointerout', e => { if (e.target.closest('[data-tip]')) tip.style.display = 'none'; });
 /* キー・スワイプ */
+let kb = '', kt;
 addEventListener('keydown', e => {
   const k = e.key; if (e.target.tagName === 'INPUT' && /Arrow/.test(k)) return;
   if (k === 'Escape') { demoing = false; if (stage.classList.contains('open')) closeDrawer(); else if (ov) show(cur); else if (cur > 0) home(); }
   else if (k === 'ArrowRight' || k === ' ') { e.preventDefault(); show(ov ? cur : cur + 1); }
   else if (k === 'ArrowLeft') show(cur - 1);
-  else if (/^[1-9]$/.test(k)) show(+k - 1);
+  else if (/^[0-9]$/.test(k)) {   // 2桁のページは続けて打つ（1→2 で p.12）。続きが無ければ0.5秒で確定
+    clearTimeout(kt); kb += k; const go = () => { if (+kb) show(+kb - 1); kb = ''; };
+    if (+kb * 10 > pages.length) go(); else kt = setTimeout(go, 500); }
   else if (k === 'o' || k === 'O') ov ? show(cur) : enterOv();
   else if (k === 'd' || k === 'D') demo();
 });
